@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 
+
 @dataclass
 class Templates:
     pasts = [
@@ -52,7 +53,7 @@ class Templates:
         "Can you recreate the steps I took?",
         "What were the outcomes I expected?",
         "What done?",
-        "please summarize."
+        "please summarize.",
     ]
     currents = [
         "What am I doing right now?",
@@ -104,7 +105,7 @@ class Templates:
         "What are the milestones I should achieve?",
         "How does what I'm doing now impact my future tasks?",
         "Now?",
-        "current?"
+        "current?",
     ]
     nexts = [
         "What should I do next?",
@@ -156,8 +157,7 @@ class Templates:
         "What are the next steps I should take?",
         "Can you recommend a course of action?",
         "Next?",
-        "nexts?"
+        "nexts?",
     ]
-    casuals = ['...'] * 50
+    casuals = ["..."] * 50
     queries = pasts + currents + nexts + casuals
-

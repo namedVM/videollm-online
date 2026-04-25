@@ -1,8 +1,14 @@
 from dataclasses import asdict
 
-from models import build_model_and_tokenizer, parse_args
-from data import build_concat_train_dataset, build_eval_dataset_dict, get_data_collator, get_compute_metrics_dict
+from data import (
+    build_concat_train_dataset,
+    build_eval_dataset_dict,
+    get_compute_metrics_dict,
+    get_data_collator,
+)
 from engine import TrainerWithGenToEval
+from models import build_model_and_tokenizer, parse_args
+
 
 def train():
     args = parse_args()
@@ -10,11 +16,14 @@ def train():
     train_dataset = build_concat_train_dataset(tokenizer=tokenizer, **asdict(args))
     eval_dataset_dict = build_eval_dataset_dict(tokenizer=tokenizer, **asdict(args))
     data_collator = get_data_collator(tokenizer=tokenizer, **asdict(args))
-    compute_metrics_dict = get_compute_metrics_dict(dataset_dict=eval_dataset_dict, tokenizer=tokenizer, **asdict(args))
+    compute_metrics_dict = get_compute_metrics_dict(
+        dataset_dict=eval_dataset_dict, tokenizer=tokenizer, **asdict(args)
+    )
 
-    args.gradient_checkpointing_kwargs = {'use_reentrant': False}
+    args.gradient_checkpointing_kwargs = {"use_reentrant": False}
     trainer = TrainerWithGenToEval(
-        model=model, tokenizer=tokenizer,
+        model=model,
+        tokenizer=tokenizer,
         args=args,
         train_dataset=train_dataset,
         eval_dataset=eval_dataset_dict,
@@ -35,6 +44,7 @@ def train():
                 )
             )
         print(metrics)
+
 
 if __name__ == "__main__":
     train()

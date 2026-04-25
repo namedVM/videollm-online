@@ -1,11 +1,22 @@
-
 from transformers import PretrainedConfig
 
+
 class LiveConfigMixin(PretrainedConfig):
-    def __init__(self, *, vision_pretrained: str = None,
-        frame_resolution: int = None, frame_token_cls: bool = None, frame_token_pooled: list[int] = None, frame_num_tokens: int = None,
-        v_placeholder: str = '<v>', frame_token_interval: str = None, v_placeholder_id: int = None, frame_token_interval_id: int = None,
-        stream_loss_weight: float = 1.0, vision_hidden_size=1024, **kwargs
+    def __init__(
+        self,
+        *,
+        vision_pretrained: str = None,
+        frame_resolution: int = None,
+        frame_token_cls: bool = None,
+        frame_token_pooled: list[int] = None,
+        frame_num_tokens: int = None,
+        v_placeholder: str = "<v>",
+        frame_token_interval: str = None,
+        v_placeholder_id: int = None,
+        frame_token_interval_id: int = None,
+        stream_loss_weight: float = 1.0,
+        vision_hidden_size=1024,
+        **kwargs,
     ):
         super().__init__(**kwargs)
         self.vision_pretrained = vision_pretrained
