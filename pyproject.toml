@@ -1,8 +1,7 @@
-[tool.ruff]
-# 默认开启 Isort 规则
-lint.select = ["I", "E", "F"]
-lint.fixable = ["I"]
+[tool.ruff.lint]
+select = ["I", "E", "F"]
+fixable = ["I"]
+ignore = ["E501"]
 
 [tool.ruff.format]
-# 保持与你的扩展一致的偏好
 quote-style = "double"

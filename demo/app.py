@@ -1,9 +1,11 @@
 import os
 
+# isort: off
 import torchvision
 import transformers
 
-torchvision.set_video_backend("video_reader")
+# torchvision.set_video_backend("video_reader")
+# isort: on
 from functools import partial
 
 import gradio as gr

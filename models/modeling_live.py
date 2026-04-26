@@ -285,6 +285,22 @@ def build_live(
     torch_dtype: str | torch.dtype = "auto",
     **kwargs,
 ):
+    if llm_pretrained.startswith("meta-llama"):
+        llm_pretrained = llm_pretrained.replace("meta-llama", "LLM-Research")
+        print(
+            f"Detect Llama related model, trying to download from ModelScope: {llm_pretrained}"  # noqa: E501
+        )
+    try:
+        from modelscope import snapshot_download
+
+        # 如果 llm_pretrained 是魔塔上的 Model ID (例如 'LLM-Research/Meta-Llama-3-8B')
+        # 如果它只是个本地路径且已存在，snapshot_download 会直接返回该路径
+        llm_pretrained = snapshot_download(llm_pretrained)
+        print(f"Model is ready, saved in: {llm_pretrained}")
+    except Exception as e:
+        print(
+            f"ModelScope download failed or model not found, trying to load from Hugging Face: {e}"  # noqa: E501
+        )
     model = model_class.from_pretrained(
         llm_pretrained,
         config=config_class.from_pretrained(llm_pretrained, **kwargs),
