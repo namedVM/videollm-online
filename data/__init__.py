@@ -7,6 +7,7 @@ from .data_collator import get_data_collator
 
 # all datasets loaded here
 from .ego4d import *
+from .ikea import *
 from .robustness import *
 
 __all__ = [

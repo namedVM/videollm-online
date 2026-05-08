@@ -25,7 +25,7 @@ class LiveMixin(AutoModelForCausalLM):
 
     def visual_embed(self, frames: torch.Tensor):
         if hasattr(self, "vision_encode"):
-            with torch.cuda.amp.autocast():
+            with torch.amp.autocast("cuda"):
                 frames = self.vision_encode(self.vision_encoder, frames)
             frames = frames.to(self.dtype)
         frames = self.connector(frames)
@@ -45,7 +45,27 @@ class LiveMixin(AutoModelForCausalLM):
         )
         v_mask = input_ids == self.config.v_placeholder_id
         if v_mask.any():
-            inputs_embeds[v_mask] = self.visual_embed(frames)
+            visual_embeds = self.visual_embed(frames)
+            num_v_tokens = int(v_mask.sum().item())
+            num_visual_tokens = int(visual_embeds.shape[0])
+            if num_visual_tokens != num_v_tokens:
+                logger.warning(
+                    "Visual/text placeholder mismatch: %s visual tokens vs %s placeholders. "
+                    "Applying safe truncation to the minimum length.",
+                    num_visual_tokens,
+                    num_v_tokens,
+                )
+                assign_len = min(num_visual_tokens, num_v_tokens)
+                if assign_len > 0:
+                    inputs_embeds[v_mask] = torch.cat(
+                        [
+                            visual_embeds[:assign_len],
+                            inputs_embeds[v_mask][assign_len:],
+                        ],
+                        dim=0,
+                    )
+            else:
+                inputs_embeds[v_mask] = visual_embeds
         return inputs_embeds
 
     @torch.no_grad()

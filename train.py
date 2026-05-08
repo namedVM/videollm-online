@@ -13,6 +13,10 @@ from models import build_model_and_tokenizer, parse_args
 def train():
     args = parse_args()
     model, tokenizer = build_model_and_tokenizer(is_training=True, **asdict(args))
+    if args.gradient_checkpointing:
+        model.config.use_cache = False
+        if getattr(model, "generation_config", None) is not None:
+            model.generation_config.use_cache = False
     train_dataset = build_concat_train_dataset(tokenizer=tokenizer, **asdict(args))
     eval_dataset_dict = build_eval_dataset_dict(tokenizer=tokenizer, **asdict(args))
     data_collator = get_data_collator(tokenizer=tokenizer, **asdict(args))
