@@ -9,7 +9,8 @@ ikea 数据集位置：`/data/ssd2/thw/data/dataset/ikea/`
 ```sh
 #!/bin/bash
 # train_ikea_live1+.sh
-CUDA_VISIBLE_DEVICES=4,5 \
+export CUDA_VISIBLE_DEVICES=1,2
+nohup \
 torchrun --nproc_per_node=2 --standalone train.py \
     --deepspeed configs/deepspeed/zero2.json \
     --live_version live1+ \
@@ -33,6 +34,6 @@ torchrun --nproc_per_node=2 --standalone train.py \
     --bf16 True \
     --tf32 True \
     --report_to tensorboard \
-    --output_dir outputs/ikea/live1+
+    --output_dir outputs/ikea/live1+ &> train.log &
 
 ```

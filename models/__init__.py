@@ -1,3 +1,6 @@
+import datetime
+import os
+
 from transformers import HfArgumentParser
 
 from .arguments_live import LiveTrainingArguments, get_args_class
@@ -10,4 +13,8 @@ def parse_args() -> LiveTrainingArguments:
     (args,) = HfArgumentParser(
         get_args_class(args.live_version)
     ).parse_args_into_dataclasses()
+    if args.output_dir is not None:
+        args.output_dir = os.path.join(
+            args.output_dir, datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+        )
     return args

@@ -330,16 +330,32 @@ def build_live(
     )
     tokenizer = build_live_tokenizer_and_update_config(llm_pretrained, model.config)
     if is_training:
-        lora_config = LoraConfig(
-            r=lora_r,
-            lora_alpha=lora_alpha,
-            target_modules=lora_modules,
-            lora_dropout=0.05,
-            task_type="CAUSAL_LM",
-            modules_to_save=finetune_modules,
-            inference_mode=False,
+        # If a pretrained PEFT adapter dir is provided (the same kind of checkpoint
+        # used by demo/app.py via --resume_from_checkpoint), continue training from
+        # those weights instead of initializing a brand-new LoRA.
+        adapter_config_path = (
+            os.path.join(resume_from_checkpoint, "adapter_config.json")
+            if resume_from_checkpoint
+            else ""
         )
-        model = get_peft_model(model, lora_config)
+        if resume_from_checkpoint and os.path.isfile(adapter_config_path):
+            logger.warning(
+                f"Loading pretrained PEFT adapter for continued training from: {resume_from_checkpoint}"
+            )
+            model = PeftModel.from_pretrained(
+                model, resume_from_checkpoint, is_trainable=True
+            )
+        else:
+            lora_config = LoraConfig(
+                r=lora_r,
+                lora_alpha=lora_alpha,
+                target_modules=lora_modules,
+                lora_dropout=0.05,
+                task_type="CAUSAL_LM",
+                modules_to_save=finetune_modules,
+                inference_mode=False,
+            )
+            model = get_peft_model(model, lora_config)
         model.print_trainable_parameters()
     else:
         if resume_from_checkpoint:

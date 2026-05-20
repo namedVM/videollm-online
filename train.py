@@ -1,5 +1,7 @@
 from dataclasses import asdict
 
+import os
+
 from data import (
     build_concat_train_dataset,
     build_eval_dataset_dict,
@@ -25,6 +27,25 @@ def train():
     )
 
     args.gradient_checkpointing_kwargs = {"use_reentrant": False}
+
+    # `resume_from_checkpoint` may point to a PEFT adapter directory (the same
+    # format that demo/app.py consumes). That directory has `adapter_config.json`
+    # but no `trainer_state.json`, so it must NOT be forwarded to `Trainer.train()`
+    # as a resume point. The adapter weights have already been loaded into the
+    # model in `build_model_and_tokenizer` above.
+    trainer_resume_ckpt = args.resume_from_checkpoint
+    if trainer_resume_ckpt and os.path.isfile(
+        os.path.join(trainer_resume_ckpt, "adapter_config.json")
+    ) and not os.path.isfile(
+        os.path.join(trainer_resume_ckpt, "trainer_state.json")
+    ):
+        print(
+            f"[train] Using PEFT adapter at `{trainer_resume_ckpt}` as model init; "
+            f"Trainer will start a fresh optimizer/scheduler."
+        )
+        trainer_resume_ckpt = None
+        args.resume_from_checkpoint = None
+
     trainer = TrainerWithGenToEval(
         model=model,
         tokenizer=tokenizer,
@@ -34,7 +55,7 @@ def train():
         data_collator=data_collator,
         compute_metrics=compute_metrics_dict,
     )
-    trainer.train()
+    trainer.train(resume_from_checkpoint=trainer_resume_ckpt)
     trainer.save_model()
 
     if eval_dataset_dict is not None:

@@ -117,8 +117,10 @@ class IkeaASMSegmentQA(IkeaASMStreamBenchmark):
         ):
             if meta["subset"] != subset:
                 continue
-            token_path = meta["token_path"]
             duration = meta["duration"]
+            views = list(self._iter_views(meta))
+            if not views:
+                continue
             for seg in meta["annotation"]:
                 label = seg["label"]
                 if label == "NA":
@@ -147,15 +149,19 @@ class IkeaASMSegmentQA(IkeaASMStreamBenchmark):
                         "learn": True,
                     },
                 ]
-                self.labels.append(label.lower())
-                self.annos.append(
-                    {
-                        "conversation": conversation,
-                        "load_ranges": {
-                            token_path: range(start_frame, end_frame)
-                        },
-                    }
-                )
+                # One sample per view; each batch will then naturally span
+                # all available views of a video.
+                for view, token_path in views:
+                    self.labels.append(label.lower())
+                    self.annos.append(
+                        {
+                            "conversation": conversation,
+                            "view": view,
+                            "load_ranges": {
+                                token_path: range(start_frame, end_frame)
+                            },
+                        }
+                    )
         self.labels = np.array(self.labels)
         self._build_categories()
 
@@ -211,7 +217,9 @@ class IkeaASMNarration(IkeaASMStreamBenchmark):
         ):
             if meta["subset"] != subset:
                 continue
-            token_path = meta["token_path"]
+            views = list(self._iter_views(meta))
+            if not views:
+                continue
             duration = meta["duration"]
             annotation = meta["annotation"]
             if not annotation:
@@ -284,14 +292,6 @@ class IkeaASMNarration(IkeaASMStreamBenchmark):
             # Keep load range length aligned with summed stream num_frames.
             last_frame = int(last_fps_time * frame_fps)
 
-            self.annos.append(
-                {
-                    "conversation": conversation,
-                    "load_ranges": {
-                        token_path: range(0, last_frame)
-                    },
-                }
-            )
             final_assistant = next(
                 (
                     m["content"]
@@ -300,7 +300,19 @@ class IkeaASMNarration(IkeaASMStreamBenchmark):
                 ),
                 "",
             )
-            self.labels.append(self._normalize_text(final_assistant))
+            normalized_label = self._normalize_text(final_assistant)
+            # One sample per view; the conversation/label are shared.
+            for view, token_path in views:
+                self.annos.append(
+                    {
+                        "conversation": conversation,
+                        "view": view,
+                        "load_ranges": {
+                            token_path: range(0, last_frame)
+                        },
+                    }
+                )
+                self.labels.append(normalized_label)
         self.labels = np.array(self.labels)
         self._build_categories()
 
@@ -376,7 +388,9 @@ class IkeaASMLiveChat(IkeaASMStreamBenchmark):
             if meta["subset"] != subset:
                 continue
 
-            token_path = meta["token_path"]
+            views = list(self._iter_views(meta))
+            if not views:
+                continue
             duration = meta["duration"]
             raw_conv = record["conversation"]
             if not raw_conv:
@@ -438,12 +452,6 @@ class IkeaASMLiveChat(IkeaASMStreamBenchmark):
             # Keep load range length aligned with summed stream num_frames.
             last_frame = int(last_fps_time * frame_fps)
 
-            self.annos.append(
-                {
-                    "conversation": conversation,
-                    "load_ranges": {token_path: range(0, last_frame)},
-                }
-            )
             final_assistant = next(
                 (
                     m["content"]
@@ -452,7 +460,17 @@ class IkeaASMLiveChat(IkeaASMStreamBenchmark):
                 ),
                 "",
             )
-            self.labels.append(self._normalize_text(final_assistant))
+            normalized_label = self._normalize_text(final_assistant)
+            # One sample per view; conversation/label are shared.
+            for view, token_path in views:
+                self.annos.append(
+                    {
+                        "conversation": conversation,
+                        "view": view,
+                        "load_ranges": {token_path: range(0, last_frame)},
+                    }
+                )
+                self.labels.append(normalized_label)
         self.labels = np.array(self.labels)
         self._build_categories()
 

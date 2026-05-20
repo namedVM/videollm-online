@@ -42,7 +42,10 @@ import random
 import tqdm
 
 # ── Paths ──────────────────────────────────────────────────────────────────────
-_META_PATH = "/data/ssd2/thw/data/dataset/ikea/fps2_384_siglip_tokens/metadata.json"
+# Multi-view metadata: video_paths / token_paths are dicts keyed by view (e.g.
+# dev1/dev2/dev3). Livechat generation only relies on `annotation`, `duration`
+# and `subset`, which are shared across all views, so it remains view-agnostic.
+_META_PATH = "/data/ssd2/thw/data/dataset/ikea/tokens_fps2_384_siglip_large/metadata.json"
 _LIVECHAT_DIR = "/data/ssd2/thw/data/dataset/ikea/livechat"
 
 # ── Query templates ────────────────────────────────────────────────────────────
